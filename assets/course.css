@@ -1,0 +1,224 @@
+/* ==========================================================================
+   course.css — shared stylesheet for every lesson and reference sheet.
+   Tufte-inspired: one reading column, notes in the margin, quiet colour.
+   ========================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap");
+
+:root {
+  --paper: #fffff8;
+  --ink: #1d1c1a;
+  --muted: #6b675f;
+  --rule: #e4e0d2;
+  --panel: #f5f2e6;
+  --accent: #9c3a1e;
+  --link: #8a3418;
+  --ok: #2f7d4f;
+  --ok-bg: #e5f2ea;
+  --bad: #b3261e;
+  --bad-bg: #fbe7e5;
+
+  /* HTTP message parts: used by http-message.js and the reference sheets */
+  --part-start: #1f5f9e;   /* request line / status line */
+  --part-head:  #8a5a00;   /* headers */
+  --part-blank: #8a8577;   /* the empty line */
+  --part-body:  #2f7d4f;   /* body */
+
+  --serif: "Source Serif 4", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --mono: "JetBrains Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
+  --col: 660px;
+  --margin-col: 260px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #171614;
+    --ink: #e9e5da;
+    --muted: #a39e92;
+    --rule: #34312b;
+    --panel: #211f1b;
+    --accent: #e08a62;
+    --link: #f0a27c;
+    --ok: #7fcf9b;
+    --ok-bg: #1d3125;
+    --bad: #f08a80;
+    --bad-bg: #3a1f1c;
+    --part-start: #7fb4ea;
+    --part-head:  #e3b45c;
+    --part-blank: #8f8a7e;
+    --part-body:  #7fcf9b;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #171614; --ink: #e9e5da; --muted: #a39e92; --rule: #34312b;
+  --panel: #211f1b; --accent: #e08a62; --link: #f0a27c;
+  --ok: #7fcf9b; --ok-bg: #1d3125; --bad: #f08a80; --bad-bg: #3a1f1c;
+  --part-start: #7fb4ea; --part-head: #e3b45c; --part-blank: #8f8a7e; --part-body: #7fcf9b;
+}
+
+/* ---------- Base ---------- */
+* { box-sizing: border-box; }
+html { font-size: 18px; -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  line-height: 1.6;
+  font-optical-sizing: auto;
+}
+main {
+  max-width: calc(var(--col) + var(--margin-col) + 56px);
+  padding: 3.5rem 16px 5rem;
+  margin: 0 auto;
+}
+main > * { max-width: var(--col); }
+
+a { color: var(--link); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { text-decoration-thickness: 2px; }
+
+h1, h2, h3 { font-weight: 600; line-height: 1.2; }
+h1 { font-size: 2.1rem; margin: 0.2rem 0 0.6rem; letter-spacing: -0.01em; }
+h2 { font-size: 1.35rem; margin: 2.8rem 0 0.8rem; }
+h3 { font-size: 1.05rem; margin: 1.8rem 0 0.5rem; }
+p, li { hyphens: auto; }
+hr { border: 0; border-top: 1px solid var(--rule); margin: 2.5rem 0; }
+
+.kicker {
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--accent);
+}
+.subtitle { font-style: italic; color: var(--muted); font-size: 1.15rem; margin-top: 0; }
+.lede { font-size: 1.12rem; }
+
+code, kbd, pre { font-family: var(--mono); font-size: 0.82em; }
+:not(pre) > code { background: var(--panel); padding: 0.08em 0.3em; border-radius: 3px; }
+pre {
+  background: var(--panel); border: 1px solid var(--rule); border-radius: 6px;
+  padding: 0.9rem 1rem; overflow-x: auto; line-height: 1.5;
+}
+.comment { color: var(--muted); }
+
+/* ---------- Margin notes (Tufte sidenotes) ---------- */
+.sidenote {
+  float: right; clear: right;
+  width: var(--margin-col);
+  margin-right: calc(-1 * (var(--margin-col) + 40px));
+  margin-top: 0.2rem;
+  font-size: 0.78rem; line-height: 1.45; color: var(--muted);
+}
+.sidenote::before { content: "→ "; color: var(--accent); }
+@media (max-width: 1000px) {
+  .sidenote {
+    float: none; display: block; width: auto; margin: 0.6rem 0 1rem;
+    padding-left: 0.8rem; border-left: 2px solid var(--rule);
+  }
+}
+
+/* ---------- Callouts ---------- */
+.callout {
+  border-left: 3px solid var(--accent); background: var(--panel);
+  padding: 0.8rem 1.1rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0;
+}
+.callout > :first-child { margin-top: 0; }
+.callout > :last-child { margin-bottom: 0; }
+.callout.big-idea { font-size: 1.1rem; }
+.callout .label {
+  display: block; font-family: var(--mono); font-size: 0.7rem;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.3rem;
+}
+
+/* ---------- Tables ---------- */
+table { border-collapse: collapse; width: 100%; font-size: 0.88rem; margin: 1rem 0 1.5rem; }
+th, td { text-align: left; padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 600; border-bottom: 1.5px solid var(--ink); }
+.table-wrap { overflow-x: auto; }
+
+/* ---------- Step lists (real-world tasks) ---------- */
+ol.steps { counter-reset: step; list-style: none; padding-left: 0; }
+ol.steps > li { counter-increment: step; position: relative; padding-left: 2.3rem; margin-bottom: 0.9rem; }
+ol.steps > li::before {
+  content: counter(step); position: absolute; left: 0; top: 0.05rem;
+  width: 1.6rem; height: 1.6rem; border-radius: 50%;
+  border: 1.5px solid var(--accent); color: var(--accent);
+  font-family: var(--mono); font-size: 0.75rem; display: grid; place-items: center;
+}
+
+/* ---------- Source & footer blocks ---------- */
+.primary-source {
+  border: 1px solid var(--rule); border-radius: 6px; padding: 1rem 1.2rem; margin: 2rem 0;
+}
+.primary-source .label { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.primary-source p { margin: 0.3rem 0 0; }
+
+.ask {
+  margin: 2rem 0; padding: 1rem 1.2rem; border-radius: 6px;
+  background: var(--panel); border: 1px dashed var(--accent);
+}
+.lesson-nav { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; font-size: 0.9rem; margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
+.muted { color: var(--muted); }
+
+/* ---------- Quiz (assets/quiz.js) ---------- */
+.quiz { margin: 1.5rem 0; }
+.quiz .q { margin: 0 0 1.8rem; }
+.quiz .q-prompt { font-weight: 600; margin-bottom: 0.6rem; }
+.quiz .q-prompt .num { font-family: var(--mono); color: var(--accent); font-weight: 400; margin-right: 0.4rem; }
+.quiz .q-options { display: grid; gap: 0.45rem; padding: 0; margin: 0; list-style: none; }
+.quiz button.opt {
+  width: 100%; text-align: left; font: inherit; font-size: 0.95rem; color: var(--ink);
+  background: transparent; border: 1px solid var(--rule); border-radius: 6px;
+  padding: 0.55rem 0.8rem; cursor: pointer; transition: border-color .15s, background .15s;
+}
+.quiz button.opt:hover:not(:disabled) { border-color: var(--accent); }
+.quiz button.opt:disabled { cursor: default; }
+.quiz button.opt.correct { border-color: var(--ok); background: var(--ok-bg); }
+.quiz button.opt.wrong { border-color: var(--bad); background: var(--bad-bg); }
+.quiz .q-explain { display: none; font-size: 0.88rem; margin-top: 0.6rem; padding-left: 0.8rem; border-left: 2px solid var(--rule); }
+.quiz .q.answered .q-explain { display: block; }
+.quiz .q-verdict { font-weight: 600; }
+.quiz .q-verdict.ok { color: var(--ok); }
+.quiz .q-verdict.bad { color: var(--bad); }
+.quiz .q-score { font-family: var(--mono); font-size: 0.85rem; color: var(--muted); }
+.quiz .q-retry { font: inherit; font-size: 0.85rem; margin-left: 0.8rem; background: none; border: 1px solid var(--rule); border-radius: 4px; padding: 0.2rem 0.6rem; color: var(--ink); cursor: pointer; }
+
+/* ---------- HTTP message explorer (assets/http-message.js) ---------- */
+.http-msg { margin: 1.5rem 0; }
+.http-msg pre { position: relative; white-space: pre; }
+.http-msg figcaption { font-size: 0.82rem; color: var(--muted); margin-top: 0.4rem; }
+.http-msg [data-part] { border-radius: 3px; cursor: pointer; transition: background .15s, outline-color .15s; outline: 1px solid transparent; }
+.http-msg [data-part]:hover { outline-color: var(--muted); }
+.http-msg [data-kind="start"] { color: var(--part-start); }
+.http-msg [data-kind="head"]  { color: var(--part-head); }
+.http-msg [data-kind="blank"] { color: var(--part-blank); font-style: italic; }
+.http-msg [data-kind="body"]  { color: var(--part-body); }
+.http-msg .plain [data-kind] { color: inherit; }            /* task mode hides the colour code */
+.http-msg [data-part].active { background: color-mix(in srgb, var(--accent) 18%, transparent); outline-color: var(--accent); }
+.http-msg [data-part].hit  { background: var(--ok-bg); outline-color: var(--ok); }
+.http-msg [data-part].miss { background: var(--bad-bg); outline-color: var(--bad); animation: shake .3s; }
+@keyframes shake { 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+.http-msg .msg-note {
+  min-height: 3.2rem; font-size: 0.88rem; padding: 0.6rem 0.8rem; margin-top: 0.5rem;
+  border-left: 3px solid var(--accent); background: var(--panel); border-radius: 0 6px 6px 0;
+}
+.http-msg .msg-note b { font-family: var(--mono); font-size: 0.85em; }
+.http-msg .msg-task { font-weight: 600; margin: 0.6rem 0 0.3rem; }
+.http-msg .msg-progress { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
+.legend { display: flex; gap: 1.1rem; flex-wrap: wrap; font-family: var(--mono); font-size: 0.72rem; margin: 0.3rem 0 0; }
+.legend span::before { content: "■ "; }
+.legend .start { color: var(--part-start); }
+.legend .head  { color: var(--part-head); }
+.legend .blank { color: var(--part-blank); }
+.legend .body  { color: var(--part-body); }
+
+/* ---------- Print ---------- */
+@media print {
+  :root { --paper: #fff; --ink: #000; }
+  html { font-size: 11pt; }
+  main { max-width: none; padding: 0; }
+  main > * { max-width: none; }
+  .sidenote { float: none; width: auto; margin: 0.3rem 0 0.6rem; padding-left: 0.6rem; border-left: 1px solid #ccc; }
+  .ask, .lesson-nav, .quiz .q-retry, .no-print { display: none; }
+  .quiz .q-explain { display: block; }
+  pre, table, .callout, .http-msg { break-inside: avoid; }
+  a { color: inherit; }
+}

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HTTP Message Cheat Sheet</title>
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .shape { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; max-width: none; }
+  .shape pre { margin: 0.3rem 0 0; font-size: 0.78rem; }
+  .shape h3 { margin-top: 0.5rem; }
+  .s { color: var(--part-start); } .h { color: var(--part-head); } .b { color: var(--part-blank); font-style: italic; } .d { color: var(--part-body); }
+</style>
+</head>
+<body>
+<main>
+
+<p class="kicker">Reference · From Lesson 01</p>
+<h1>HTTP message cheat sheet</h1>
+<p class="subtitle">One request in, one response out. Four parts each.</p>
+
+<div class="shape">
+  <div>
+    <h3>Request</h3>
+<pre><span class="s">POST /api/orders HTTP/1.1</span>      <span class="comment">← request line: method target version</span>
+<span class="h">Host: the-edit.vercel.app</span>      <span class="comment">← headers: Name: value</span>
+<span class="h">Content-Type: application/json</span>
+<span class="b">↵</span>                              <span class="comment">← empty line: head ends</span>
+<span class="d">{"items":[…]}</span>                  <span class="comment">← body (POST/PUT/PATCH)</span></pre>
+  </div>
+  <div>
+    <h3>Response</h3>
+<pre><span class="s">HTTP/1.1 201 Created</span>           <span class="comment">← status line: version code reason</span>
+<span class="h">Content-Type: application/json</span> <span class="comment">← headers</span>
+<span class="h">Location: /api/orders/ord_789</span>
+<span class="b">↵</span>                              <span class="comment">← empty line</span>
+<span class="d">{"id":"ord_789",…}</span>             <span class="comment">← body (optional)</span></pre>
+  </div>
+</div>
+<p class="legend"><span class="start">start line</span><span class="head">headers</span><span class="blank">empty line</span><span class="body">body</span></p>
+
+<h2>Rules of thumb</h2>
+<ul>
+  <li>The <strong>client always initiates</strong>; the server only ever responds.</li>
+  <li>The <strong>request target</strong> is only the path; the domain goes in the <code>Host</code> header.</li>
+  <li>Header names are <strong>case-insensitive</strong>; each header is one line.</li>
+  <li><code>GET</code> has no body. <code>POST</code>, <code>PUT</code>, <code>PATCH</code> carry one.</li>
+  <li>The <strong>reason phrase</strong> is decoration. Code reads the status <em>number</em>.</li>
+  <li><strong>Stateless:</strong> every request must carry its own context (cookie / token header).</li>
+  <li><strong>HTTP/2 &amp; 3:</strong> binary frames; start line becomes <code>:method</code>, <code>:path</code>, <code>:status</code>. Same parts.</li>
+</ul>
+
+<h2>Status code classes</h2>
+<div class="table-wrap"><table>
+  <tr><th>Class</th><th>Meaning</th><th>Seen so far</th></tr>
+  <tr><td><code>1xx</code></td><td>Informational</td><td></td></tr>
+  <tr><td><code>2xx</code></td><td>Success</td><td><code>200 OK</code>, <code>201 Created</code></td></tr>
+  <tr><td><code>3xx</code></td><td>Redirection</td><td></td></tr>
+  <tr><td><code>4xx</code></td><td>Client error</td><td><code>401 Unauthorized</code> (no / bad credentials)</td></tr>
+  <tr><td><code>5xx</code></td><td>Server error</td><td></td></tr>
+</table></div>
+
+<h2>Headers met so far</h2>
+<div class="table-wrap"><table>
+  <tr><th>Header</th><th>In</th><th>Says</th></tr>
+  <tr><td><code>Host</code></td><td>request</td><td>Which site the request is for</td></tr>
+  <tr><td><code>Accept</code></td><td>request</td><td>Formats the client would like back</td></tr>
+  <tr><td><code>User-Agent</code></td><td>request</td><td>Which program sent it</td></tr>
+  <tr><td><code>Content-Type</code></td><td>both</td><td>How to interpret the body (e.g. <code>application/json</code>)</td></tr>
+  <tr><td><code>Content-Length</code></td><td>both</td><td>Body size in bytes</td></tr>
+  <tr><td><code>Location</code></td><td>response</td><td>Where the newly created / moved resource lives</td></tr>
+  <tr><td><code>Cache-Control</code></td><td>response</td><td>Who may cache it, and for how long</td></tr>
+  <tr><td><code>Via</code></td><td>both</td><td>Proxies the message passed through</td></tr>
+</table></div>
+
+<h2>Message ↔ code (Vercel Function / Next.js Route Handler)</h2>
+<div class="table-wrap"><table>
+  <tr><th>Message part</th><th>Read (request)</th><th>Write (response)</th></tr>
+  <tr><td>Method</td><td><code>request.method</code></td><td>—</td></tr>
+  <tr><td>Target</td><td><code>new URL(request.url).pathname</code></td><td>—</td></tr>
+  <tr><td>Status</td><td>—</td><td><code>new Response(body, { status: 201 })</code></td></tr>
+  <tr><td>Headers</td><td><code>request.headers.get("content-type")</code></td><td><code>{ headers: { "Content-Type": "…" } }</code></td></tr>
+  <tr><td>Body</td><td><code>await request.json()</code></td><td>first argument, or <code>Response.json(data)</code></td></tr>
+</table></div>
+
+<h2>Inspect real messages</h2>
+<pre><code>curl.exe -i URL     <span class="comment"># response head + body</span>
+curl.exe -v URL     <span class="comment"># > request lines, &lt; response lines</span></code></pre>
+<p>Chrome: <kbd>F12</kbd> → Network → Fetch/XHR → click a request → Headers / Preview.</p>
+
+<p class="muted" style="font-size:0.8rem">Sources: <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Messages">MDN: HTTP messages</a> ·
+<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview">MDN: Overview of HTTP</a> ·
+<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status">MDN: Status codes</a> ·
+<a href="https://vercel.com/docs/functions">Vercel Functions</a> ·
+<a href="https://nextjs.org/docs/app/getting-started/route-handlers">Next.js Route Handlers</a> ·
+<a href="https://www.rfc-editor.org/rfc/rfc9110.html">RFC 9110</a></p>
+
+<nav class="lesson-nav">
+  <span>Lesson: <a href="../lessons/0001-anatomy-of-an-http-exchange.html">01 · The anatomy of an HTTP exchange</a></span>
+</nav>
+
+</main>
+</body>
+</html>

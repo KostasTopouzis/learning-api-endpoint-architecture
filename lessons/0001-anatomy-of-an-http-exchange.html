@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HTTP Message Anatomy</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+
+<p class="kicker">Lesson 01 · Foundations</p>
+<h1>The anatomy of an HTTP exchange</h1>
+<p class="subtitle">Every endpoint you will ever build reads one message and writes one message back.</p>
+
+<p class="lede">
+When you added a Vercel Function to Marquee Moon, you wrote code that “handles a request”. This lesson makes that request
+visible: what it physically is, which parts it has, and where each part shows up in your TypeScript.
+<span class="sidenote">Time: about 15 minutes. You need a terminal and Chrome.</span>
+</p>
+
+<div class="callout big-idea">
+  <span class="label">The one idea</span>
+  HTTP is a conversation of <strong>two text messages</strong>. The client always speaks first with a
+  <em>request</em>; the server answers with a <em>response</em>. An endpoint is a function from the
+  first message to the second.
+  <span class="sidenote">MDN: the client “is <em>always</em> the entity initiating the request. It is never the server.” —
+  <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview">Overview of HTTP</a></span>
+</div>
+
+<p>
+Both messages share the same four-part shape:
+<span class="sidenote">Structure from <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Messages">MDN: HTTP messages</a>.
+The start line plus headers together are called the <em>head</em>.</span>
+</p>
+<ol>
+  <li><strong>A start line</strong>: what is being asked for (request), or how it went (response).</li>
+  <li><strong>Headers</strong>: one <code>Name: value</code> pair per line, describing the message.</li>
+  <li><strong>An empty line</strong>: “the head is over”.</li>
+  <li><strong>A body</strong> (optional): the actual data, like JSON or HTML.</li>
+</ol>
+
+<h2>A real request, to TMDB</h2>
+<p>
+This is the exact request <code>curl</code> sent when I asked TMDB for movie 603 (<em>The Matrix</em>) today, with no API key.
+Click each coloured part.
+</p>
+
+<figure class="http-msg" data-http-msg data-mode="explore">
+<pre><span data-part="method" data-kind="start" data-name="Method" data-note="What the client wants done to the resource. GET means: send me a representation of it.">GET</span> <span data-part="target" data-kind="start" data-name="Request target (path)" data-note="Which resource. Just the path: the scheme (https) and the domain are not in this line.">/3/movie/603</span> <span data-part="version" data-kind="start" data-name="Protocol version" data-note="Which version of HTTP the message is written in. Almost always HTTP/1.1 in text form.">HTTP/1.1</span>
+<span data-part="host" data-kind="head" data-name="Host header" data-note="Which domain the request is for. One server (one IP address) can host many sites, so the client must say which one it means.">Host: api.themoviedb.org</span>
+<span data-part="ua" data-kind="head" data-name="User-Agent header" data-note="Which program sent the request. Here curl; in the browser, a long Chrome string.">User-Agent: curl/8.15.0</span>
+<span data-part="accept" data-kind="head" data-name="Accept header" data-note="Which response formats the client is willing to receive. */* means: anything.">Accept: */*</span>
+<span data-part="blank" data-kind="blank" data-name="Empty line" data-note="Ends the head. Drawn here as ↵ so you can see it; on the wire it is an empty line. A GET has no body, so the message ends here.">↵</span></pre>
+<p class="legend"><span class="start">start line</span><span class="head">headers</span><span class="blank">empty line</span><span class="body">body</span></p>
+<figcaption>Request captured with <code>curl -v</code> on 2026-10-28.</figcaption>
+</figure>
+
+<p>
+Notice what is <em>not</em> there: no body. A <code>GET</code> asks for something, so it has nothing to send.
+<code>POST</code>, <code>PUT</code> and <code>PATCH</code> are the methods that carry a request body.
+<span class="sidenote">“Only <code>PATCH</code>, <code>POST</code>, and <code>PUT</code> requests have a body.” —
+<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Messages#body">MDN</a></span>
+</p>
+
+<h2>TMDB's response</h2>
+
+<figure class="http-msg" data-http-msg data-mode="explore">
+<pre><span data-part="r-version" data-kind="start" data-name="Protocol version" data-note="The server answers in the same HTTP version.">HTTP/1.1</span> <span data-part="r-code" data-kind="start" data-name="Status code" data-note="A number saying how it went. 4xx means the client made a mistake: here, we sent no API key.">401</span> <span data-part="r-reason" data-kind="start" data-name="Reason phrase" data-note="Human-readable label for the code. Purely informational: software reads the number, never this text.">Unauthorized</span>
+<span data-part="r-ctype" data-kind="head" data-name="Content-Type header" data-note="How to interpret the body bytes: JSON, encoded as UTF-8. Your fetch() code relies on this before calling .json().">Content-Type: application/json; charset=utf-8</span>
+<span data-part="r-date" data-kind="head" data-name="Date header" data-note="When the server produced the response.">Date: Wed, 28 Oct 2026 14:58:17 GMT</span>
+<span data-part="r-server" data-kind="head" data-name="Server header" data-note="Which server software answered (openresty, built on nginx).">Server: openresty</span>
+<span data-part="r-cache" data-kind="head" data-name="Cache-Control header" data-note="Caching instructions: anyone may cache this answer for 300 seconds. A whole later lesson lives here.">Cache-Control: public, max-age=300</span>
+<span data-part="r-via" data-kind="head" data-name="Via header" data-note="The response passed through a proxy, Amazon CloudFront, on its way to you. Messages often travel through intermediaries like this.">Via: 1.1 4de0c06….cloudfront.net (CloudFront)</span>
+<span data-part="r-blank" data-kind="blank" data-name="Empty line" data-note="Ends the head. Everything after it is the body.">↵</span>
+<span data-part="r-body" data-kind="body" data-name="Body" data-note="The payload. TMDB's own error object, in JSON, as Content-Type promised.">{"status_code":7,"status_message":"Invalid API key: You must be granted a valid key.","success":false}</span></pre>
+<p class="legend"><span class="start">status line</span><span class="head">headers</span><span class="blank">empty line</span><span class="body">body</span></p>
+<figcaption>Trimmed: 7 more headers (e.g. <code>Transfer-Encoding</code>, <code>X-Cache</code>) omitted for space.</figcaption>
+</figure>
+
+<p>
+The response's start line is called the <strong>status line</strong>; the request's is the <strong>request line</strong>.
+That <code>401</code> is not a bug: it is TMDB telling us, in a precise format, that we didn't authenticate.
+Hold that thought. Where your TMDB key lives is the subject of an upcoming lesson.
+<span class="sidenote">Status codes come in five classes: 1xx informational, 2xx success, 3xx redirection, 4xx client error, 5xx server error. —
+<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status">MDN: status codes</a></span>
+</p>
+
+<p>
+Two more facts to carry with you:
+</p>
+<ul>
+  <li><strong>HTTP is stateless.</strong> The server keeps no link between two requests. Anything it needs to know, such as
+  “this is that shopper's cart”, must ride along inside each request, usually as a header (a cookie or a token).
+  <span class="sidenote">“Stateless, but not sessionless”: cookies add sessions on top, via headers. —
+  <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview#http_is_stateless_but_not_sessionless">MDN</a></span></li>
+  <li><strong>HTTP/2 and HTTP/3 change the packaging, not the parts.</strong> They send binary frames instead of text, and the
+  start line becomes “pseudo-headers” (<code>:method</code>, <code>:path</code>, <code>:status</code>). The method, path,
+  status, headers and body are all still there.
+  <span class="sidenote">“The semantics are the same.” — <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Messages#http2_messages">MDN: HTTP/2 messages</a></span></li>
+</ul>
+
+<h2>The same parts, in your code</h2>
+<p>
+A Vercel Function receives the request message as a standard Web <code>Request</code> object and returns a <code>Response</code>
+object. The platform does the parsing and the writing. You only read and set the parts.
+<span class="sidenote">Function signature from <a href="https://vercel.com/docs/functions">Vercel Functions docs</a>. The Edit's Next.js Route Handlers
+(<code>export async function GET(request: Request)</code>) use the very same objects:
+<a href="https://nextjs.org/docs/app/getting-started/route-handlers">Next.js docs</a>.</span>
+</p>
+
+<pre><code><span class="comment">// api/movie.ts  — a Vercel Function in Marquee Moon</span>
+export default {
+  async fetch(request: Request) {
+    <span class="comment">// ── read the REQUEST message ─────────────────────────────</span>
+    request.method;                    <span class="comment">// "GET"          ← request line</span>
+    new URL(request.url).pathname;     <span class="comment">// "/api/movie"   ← request line</span>
+    request.headers.get("accept");     <span class="comment">// "*/*"          ← a header</span>
+    <span class="comment">// await request.json();           // the body (POST / PUT / PATCH)</span>
+
+    <span class="comment">// ── write the RESPONSE message ───────────────────────────</span>
+    return new Response(
+      JSON.stringify({ title: "The Matrix" }),             <span class="comment">// ← body</span>
+      {
+        status: 200,                                       <span class="comment">// ← status line</span>
+        headers: { "Content-Type": "application/json" },   <span class="comment">// ← headers</span>
+      },
+    );
+  },
+};</code></pre>
+
+<p>
+You never write the empty line or the protocol version: the runtime serialises your <code>Response</code> into a real message.
+That's the whole trick. Once you can see the two messages, “building an endpoint” means deciding
+<em>which</em> request it accepts and <em>which</em> response it returns. Every later lesson (methods, status codes,
+errors, auth, caching) is a decision about one of these parts.
+</p>
+
+<hr>
+
+<h2>Practice 1 · Find the parts</h2>
+<p>
+New message, no colours. A shopper on The Edit places an order: the browser sends a request to your function,
+which answers. Follow the prompts and click the right part. Try to recall before you guess.
+</p>
+
+<figure class="http-msg" data-http-msg data-mode="find">
+<pre class="plain"><span class="comment">→ request   (browser → your function)</span>
+<span data-part="e-method" data-kind="start" data-name="Method" data-note="POST: submit data to the resource, creating something.">POST</span> <span data-part="e-target" data-kind="start" data-name="Request target (path)" data-note="The orders collection on your API.">/api/orders</span> <span data-part="e-version" data-kind="start" data-name="Protocol version" data-note="HTTP/1.1.">HTTP/1.1</span>
+<span data-part="e-host" data-kind="head" data-name="Host header" data-note="Which site this request is for.">Host: the-edit.vercel.app</span>
+<span data-part="e-ctype" data-kind="head" data-name="Content-Type header" data-note="Tells your function the body is JSON, so request.json() is the right way to read it.">Content-Type: application/json</span>
+<span data-part="e-clen" data-kind="head" data-name="Content-Length header" data-note="The body's size in bytes (46). Size only: says nothing about format.">Content-Length: 46</span>
+<span data-part="e-blank" data-kind="blank" data-name="Empty line" data-note="Ends the request head.">↵</span>
+<span data-part="e-body" data-kind="body" data-name="Request body" data-note="The order itself: what await request.json() returns in your function.">{"items":[{"productId":"p_123","quantity":2}]}</span>
+
+<span class="comment">← response  (your function → browser)</span>
+<span data-part="e-rversion" data-kind="start" data-name="Protocol version" data-note="HTTP/1.1.">HTTP/1.1</span> <span data-part="e-code" data-kind="start" data-name="Status code" data-note="201: success, and a new resource was created. Set by status: 201 in your Response.">201</span> <span data-part="e-reason" data-kind="start" data-name="Reason phrase" data-note="Human label for 201. Software ignores it.">Created</span>
+<span data-part="e-rctype" data-kind="head" data-name="Content-Type header (response)" data-note="The response body is JSON too.">Content-Type: application/json</span>
+<span data-part="e-loc" data-kind="head" data-name="Location header" data-note="Points to the newly created resource, so the client knows where the order now lives.">Location: /api/orders/ord_789</span>
+<span data-part="e-rblank" data-kind="blank" data-name="Empty line (response)" data-note="Ends the response head.">↵</span>
+<span data-part="e-rbody" data-kind="body" data-name="Response body" data-note="The created order, as JSON.">{"id":"ord_789","status":"pending","total":118}</span></pre>
+<ol class="msg-tasks" hidden>
+  <li data-find="e-method">Click the <strong>method</strong>.</li>
+  <li data-find="e-target">Click the <strong>request target</strong>.</li>
+  <li data-find="e-ctype">Click the request header that tells your function <strong>how to read the body</strong>.</li>
+  <li data-find="e-blank">Click the line that <strong>ends the request's head</strong>.</li>
+  <li data-find="e-body">Click the <strong>data your function gets from <code>await request.json()</code></strong>.</li>
+  <li data-find="e-code">Click the part your code set with <strong><code>status: 201</code></strong>.</li>
+  <li data-find="e-loc">Click the header telling the browser <strong>where the new order lives</strong>. (Not covered above. Reason it out.)</li>
+  <li data-find="e-rbody">Click the <strong>response body</strong>.</li>
+</ol>
+</figure>
+
+<h2>Practice 2 · Recall</h2>
+<p>No scrolling up. Retrieval is the point: a wrong answer now makes the right one stick.</p>
+
+<div class="quiz" data-quiz>
+  <div class="q" data-answer="3">
+    <p class="q-prompt">In an HTTP/1.1 message, where does the empty line go?</p>
+    <ul class="q-options">
+      <li>Before the start line, opening it</li>
+      <li>Between the start line and headers</li>
+      <li>Between the headers and the body</li>
+      <li>After the body, closing the message</li>
+    </ul>
+    <div class="q-explain">The empty line marks the end of the head (start line + headers). Everything after it is the body.</div>
+  </div>
+
+  <div class="q" data-answer="1">
+    <p class="q-prompt">Your function for The Edit replies <code>201 Created</code>. Which part of the response carries the 201?</p>
+    <ul class="q-options">
+      <li>The status line</li>
+      <li>A response header</li>
+      <li>The response body</li>
+      <li>The request line</li>
+    </ul>
+    <div class="q-explain">The status line is <code>&lt;version&gt; &lt;status code&gt; &lt;reason phrase&gt;</code>, e.g. <code>HTTP/1.1 201 Created</code>.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-prompt">In <code>GET /api/movies/603 HTTP/1.1</code>, what is <code>/api/movies/603</code>?</p>
+    <ul class="q-options">
+      <li>The method to perform</li>
+      <li>The target resource path</li>
+      <li>The protocol version used</li>
+      <li>The server's host name</li>
+    </ul>
+    <div class="q-explain">It's the request target: which resource. The domain travels separately, in the <code>Host</code> header.</div>
+  </div>
+
+  <div class="q" data-answer="4">
+    <p class="q-prompt">Which header tells the receiver how to interpret the bytes in the body?</p>
+    <ul class="q-options">
+      <li><code>Host</code></li>
+      <li><code>Accept</code></li>
+      <li><code>Content-Length</code></li>
+      <li><code>Content-Type</code></li>
+    </ul>
+    <div class="q-explain"><code>Content-Type</code> describes the body's format (e.g. <code>application/json</code>). <code>Accept</code> is what the client <em>would like</em> back; <code>Content-Length</code> is only the size.</div>
+  </div>
+
+  <div class="q" data-answer="2">
+    <p class="q-prompt">HTTP is stateless. What does that mean for The Edit's shopping cart?</p>
+    <ul class="q-options">
+      <li>The server remembers every cart between requests</li>
+      <li>Each request must carry its own context</li>
+      <li>Carts only survive within a single connection</li>
+      <li>Carts live inside the response status line</li>
+    </ul>
+    <div class="q-explain">The server keeps no link between requests, so each one must identify the shopper itself, typically with a cookie or token header.</div>
+  </div>
+
+  <div class="q" data-answer="3">
+    <p class="q-prompt">In a Vercel Function, which piece of code decides the response's status line?</p>
+    <ul class="q-options">
+      <li>The <code>request.method</code> value</li>
+      <li>The <code>Content-Type</code> header</li>
+      <li>The <code>status</code> option</li>
+      <li>The <code>JSON.stringify</code> call</li>
+    </ul>
+    <div class="q-explain"><code>new Response(body, { status: 201 })</code> → the runtime writes <code>HTTP/1.1 201 Created</code>.</div>
+  </div>
+</div>
+
+<h2>Practice 3 · See it in the wild</h2>
+<ol class="steps">
+  <li>In PowerShell, run:
+    <pre><code>curl.exe -i https://api.themoviedb.org/3/movie/603</code></pre>
+    <code>-i</code> prints the response head as well as the body. You should get the same <code>401</code> as above. Name its four parts out loud.
+    <span class="sidenote">Use <code>curl.exe</code>, not <code>curl</code>, so PowerShell can't swap in a different command.</span>
+  </li>
+  <li>Now run it with <code>-v</code> instead of <code>-i</code>. Lines starting <code>&gt;</code> are the request curl sent; lines starting <code>&lt;</code> are the response. Find the request's empty line.</li>
+  <li>Open Marquee Moon in Chrome, press <kbd>F12</kbd> → <strong>Network</strong> → filter <strong>Fetch/XHR</strong>, then reload. Click a request to TMDB and find: the method, the status code, the response <code>Content-Type</code>, and the body (Preview tab).
+    <span class="sidenote">If the Protocol column says <code>h2</code> or <code>h3</code>, the message travelled as binary frames. Same parts. Guide:
+    <a href="https://developer.chrome.com/docs/devtools/network">Chrome DevTools: Network</a>.</span>
+  </li>
+  <li><strong>Bring back one observation:</strong> in that request, where does your TMDB API key appear: in the URL, in a header, or nowhere? Who else could see it? Tell me your answer next session.</li>
+</ol>
+
+<div class="primary-source">
+  <span class="label">Primary source</span>
+  <p><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Messages"><strong>MDN: HTTP messages</strong></a>. The clearest
+  authoritative description of request and response structure, including HTTP/2. Read it after this lesson (about 10 min).
+  For the bigger picture, follow it with <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview">MDN: Overview of HTTP</a>.</p>
+</div>
+
+<div class="ask">
+  <strong>Stuck or curious?</strong> Ask me, your teacher, anything: “why does the domain go in a header and not the request line?”,
+  “what's a proxy actually doing?”, or “show me this for my real Marquee Moon function.” No question is too small.
+</div>
+
+<p class="muted">Spacing tip: come back in a day or two and redo <em>Practice 1</em> cold before starting Lesson 02.</p>
+
+<nav class="lesson-nav">
+  <span>Reference: <a href="../reference/http-messages.html">HTTP message cheat sheet</a></span>
+  <span class="muted">Next: Lesson 02 · The journey of a request (coming)</span>
+</nav>
+
+</main>
+<script src="../assets/http-message.js"></script>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>
